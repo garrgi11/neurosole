@@ -27,22 +27,27 @@ AI Model → Python (PyTorch / TensorFlow for generative design)
 ## 📂 Usage Guide
 
 A. Clone the repository:
-
+```
 git clone : https://github.com/garrgi11/neurosole.git
 
 cd neurosole
+```
 
 B. Run the frontend (render STL + landing page).
 
 C. Test rendering with:
 
+```
 examples/test_insole.stl
+```
 
 D. Generate a custom insole with AI:
 
-```cd ai-model
+```
+cd ai-model
 
-python generate_insole.py --input foot_scan.stl --output insole.stl``
+python generate_insole.py --input foot_scan.stl --output insole.stl
+```
 
 E. Slice and print using Fusion360 or OrcaSlicer or TinkerCAD.
 
@@ -56,7 +61,7 @@ Accessible → Anyone can generate and print their own insoles.
 
 Inclusive → Designed for flat feet, swelling, fractures, pregnancy, and more.
 
-NeuroSole is the future of personalized foot care — all feet, all people, all steps.
+NeuroSole is the future of personalized foot care → all feet, all people, all steps.
 
 ## 📌 Future Roadmap
 
