@@ -24,42 +24,42 @@ const createGradientPlaceholder = (id, from, via, to) => {
 
 const INSIGHTS = [
   {
-    badge: '01',
-    title: 'Delayed Access to Care',
+    badge: '1',
+    title: 'Design Your Sole',
     body:
-      'Orthopedic appointments for custom insoles often take 15 days to 1+ month, leaving people waiting in discomfort.',
+      'Start by designing a shoe sole based on your shoe’s shape and style, ensuring it matches your unique comfort preferences perfectly.',
     image: createGradientPlaceholder('01', '#34d399', '#6ee7b7', '#a7f3d0'),
     imageAlt: 'Illustration highlighting delayed access to orthotic care',
   },
   {
-    badge: '02',
-    title: 'Growing Market, Growing Gaps',
+    badge: '2',
+    title: 'Import Foot Scan',
     body:
-      "Despite an $8 billion insole market that's rapidly expanding, current solutions can't keep pace with rising demand.",
+      "Upload your foot scan to match your exact measurements and ensure a precise fit, guaranteeing unmatched accuracy for long-lasting daily comfort.",
     image: createGradientPlaceholder('02', '#0ea5e9', '#38bdf8', '#bfdbfe'),
     imageAlt: 'Illustration representing growing market gaps',
   },
   {
-    badge: '03',
-    title: 'Painful Shoe Trials',
+    badge: '3',
+    title: 'AI Rendering',
     body:
-      "Without proper insoles, customers can't fully test new footwear, leading to foot pain, injuries, and dissatisfaction.",
+      "Our AI generates a detailed, perfectly contoured insole model customized just for you, delivering a professional-grade result within minutes.",
     image: createGradientPlaceholder('03', '#a855f7', '#c084fc', '#ede9fe'),
     imageAlt: 'Illustration showing painful shoe trials',
   },
   {
-    badge: '04',
-    title: 'Fragmented Rehab Insights',
+    badge: '4',
+    title: 'Download & 3D Print',
     body:
-      'Clinicians lack real-time recovery data, so treatment plans lag behind what patients actually experience day to day.',
+      'Download the rendered file, 3D print your custom foam-like sheet, and prepare it for use, saving time, money, and unnecessary hassle.',
     image: createGradientPlaceholder('04', '#f97316', '#fb923c', '#fed7aa'),
     imageAlt: 'Illustration depicting fragmented rehab insights',
   },
   {
-    badge: '05',
-    title: 'Manual Fit Adjustments',
+    badge: '5',
+    title: 'Universal Shoe Profile',
     body:
-      'Most inserts still require repeat in-person tweaks, adding cost for clinics and frustration for wearers who need fast relief.',
+      'Create a universal shoe profile tied to your name—future shoes can come pre-fitted, eliminating separate insoles and simplifying footwear purchasing forever.',
     image: createGradientPlaceholder('05', '#0f766e', '#14b8a6', '#5eead4'),
     imageAlt: 'Illustration showing manual fit adjustments',
   },
@@ -171,21 +171,18 @@ export default function NeuroSoleProblemSection() {
           className={`transition-all duration-700 ease-out ${textMotionClass}`}
           style={{ transitionDelay: textVisible ? '80ms' : '0ms' }}
         >
-          <span className="text-sm font-semibold uppercase tracking-[0.45em] text-emerald-600">
-            Why NeuroSole
-          </span>
+          
           <h2
             className="mt-4 text-balance font-semibold leading-tight text-slate-900"
             style={{ fontSize: 'clamp(2.4rem, 4vw, 3.4rem)' }}
           >
-            🛑 The Problem.
+            Your Journey to Perfect Fit.
           </h2>
           <p
             className="mt-5 text-base text-slate-600 md:text-lg"
             style={{ fontSize: 'clamp(1.06rem, 1.4vw, 1.24rem)' }}
           >
-            The insoles industry is moving fast, but the patient journey still lags behind. Here are the gaps we are
-            closing first.
+            Follow these simple steps to create eco-friendly, custom 3D insoles and your universal shoe profile—fast, sustainable, and tailored to you.
           </p>
 
           <div className="mt-10 space-y-10">

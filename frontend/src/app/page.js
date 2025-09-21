@@ -52,9 +52,9 @@ export default function Home() {
   const advantages = useMemo(
     () => [
       {
-        title: "Adaptive Fit Intelligence",
+        title: "🖌 Custom AI Design",
         description:
-          "Machine learning analyses gait and pressure data to auto-adjust support profiles in near-real time.",
+          "Create your own perfectly fitted insoles at home—AI and 3D printing make professional-level comfort fast and affordable.",
         icon: "🧠",
         background: "linear-gradient(135deg, rgba(236,253,245,0.96), rgba(167,243,208,0.9))",
         textColor: "#064e3b",
@@ -68,9 +68,9 @@ export default function Home() {
         zIndex: 6,
       },
       {
-        title: "Cloud-Tuned Manufacturing",
+        title: "📊 Personal Shoe Profiles",
         description:
-          "Distributed print centres receive clean, validated build specs instantly, cutting lead times by 60%.",
+          "Build a lasting digital foot profile so brands can pre-fit your future shoes—eliminating the need for separate insoles.",
         icon: "⚙️",
         background: "linear-gradient(135deg, rgba(239,246,255,0.96), rgba(191,219,254,0.9))",
         textColor: "#0f172a",
@@ -84,9 +84,9 @@ export default function Home() {
         zIndex: 5,
       },
       {
-        title: "Clinician Co-Pilot",
+        title: "⏱ No Long Waits",
         description:
-          "A shared dashboard flags healing risks, tracks compliance, and keeps practitioners in sync with patients.",
+          "Skip orthopedic delays. Print insoles immediately, try new shoes today, and reduce doctors’ design time by days.",
         icon: "🩺",
         background: "linear-gradient(135deg, rgba(237,233,254,0.96), rgba(196,181,253,0.9))",
         textColor: "#312e81",
@@ -100,9 +100,9 @@ export default function Home() {
         zIndex: 5,
       },
       {
-        title: "Sustainable Supply Chain",
+        title: "🌱 Eco-Friendly & Perishable",
         description:
-          "Modular foam lattices reduce material waste while automated recycling keeps inserts in circulation longer.",
+          "3D-print foam-like sheets that are perishable after use—cutting e-waste, saving money, and promoting sustainability.",
         icon: "🌿",
         background: "linear-gradient(135deg, rgba(240,253,250,0.96), rgba(134,239,172,0.9))",
         textColor: "#065f46",
@@ -547,7 +547,7 @@ export default function Home() {
                   Why NeuroSole
                 </p>
                 <h2 className="text-3xl font-semibold text-emerald-900 md:text-4xl">
-                   The Problem
+                   The Problem.
                 </h2>
                 <p className="text-base text-slate-600 md:text-lg">
                   The insoles industry is moving fast, but the patient journey still lags behind. Here are the gaps we are closing first.
