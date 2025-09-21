@@ -14,27 +14,27 @@ export default function Home() {
       {
         id: "global-overview",
         image: "/images/main.avif",
-        heading: "Custom Insoles, Worldwide",
+        heading: "Soles, Solved Fast",
         description:
-          "From scan to shipment in days. AI-powered orthotics tailored to every wearer without the lab overhead.",
-        ctaLabel: "I want to sell custom-fit insoles",
+          "Every day without proper insoles risks discomfort and injury. NeuroSole uses advanced 3D printing to deliver precision-fit insoles without the wait—reducing waste and creating a data-driven shoe profile for the future of footwear manufacturing.",
+        ctaLabel: "Build Your Fit Profile",
       },
       {
         id: "precision-personalisation",
         image: "/images/68911fe0c0c9d5b007515cdc_title_image_A1_framed.avif",
-        heading: "Precision Meets Personalisation",
+        heading: "Comfort. Custom. Clean.",
         description:
-          "Deliver medical-grade fit with a digital workflow that keeps clinicians and retailers in sync across the globe.",
-        ctaLabel: "Schedule a discovery call",
+          "NeuroSole tackles three pain points at once: long orthopedic wait times, unsustainable insole waste, and inconsistent shoe fit. Our 3D-printed solution ensures your comfort today while paving the way for greener, smarter footwear tomorrow.",
+        ctaLabel: "Make Your Pair",
       },
-      {
-        id: "scale-business",
-        image: "/images/main.avif",
-        heading: "Scale Your Orthotic Business",
-        description:
-          "Automate measurements, approvals, and fulfilment from one dashboard while patients enjoy frictionless comfort.",
-        ctaLabel: "Explore the NeuroSole platform",
-      },
+      //{
+     //   id: "scale-business",
+       // image: "/images/main.avif",
+     //   heading: "Scale Your Orthotic Business",
+     //   description:
+      //    "Automate measurements, approvals, and fulfilment from one dashboard while patients //enjoy frictionless comfort.",
+       // ctaLabel: "Explore the NeuroSole platform",
+      //},
     ],
     []
   );
@@ -142,14 +142,14 @@ export default function Home() {
           "Orthopedic appointments for custom insoles often take 15 days to 1+ month, leaving people waiting in discomfort.",
       },
       {
-        title: "Growing Market, Growing Gaps",
+        title: "♻ Waste & Cost",
         body:
-          "Despite an $8 billion insole market that's rapidly expanding, current solutions can't keep pace with rising demand.",
+          "Traditional insoles create e-waste and drain money with replacements that don’t last. Frequent purchases harm the planet, burden budgets, and highlight the need for smarter, sustainable footwear solutions worldwide. ",
       },
       {
-        title: "Painful Shoe Trials",
+        title: "📊No Shoe Profiles",
         body:
-          "Without proper insoles, customers can't fully test new footwear, leading to foot pain, injuries, and dissatisfaction.",
+          "Lack of universal shoe profiles keeps brands from building perfectly fitted shoes—insoles shouldn’t be permanent fixes. Data-driven profiles would revolutionize footwear design, ensuring precision comfort and eliminating unnecessary insoles entirely.",
       },
     ],
     []
@@ -231,13 +231,7 @@ export default function Home() {
     goToSlide((prev) => prev - 1);
   }, [goToSlide]);
 
-  // Auto-slide every 3 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handleNext();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [handleNext]);
+  // Manual navigation only (no auto-advance)
 
   useEffect(() => {
     const node = problemSectionRef.current;
@@ -519,7 +513,7 @@ export default function Home() {
           type="button"
           onClick={handlePrevious}
           aria-label="Previous slide"
-          className="group absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-emerald-200 bg-white/80 p-2 text-2xl text-emerald-600 transition-all duration-200 hover:scale-110 hover:bg-emerald-100 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:left-10 sm:p-3 sm:text-3xl"
+          className="group absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-emerald-200 bg-white/80 p-1.5 text-xl text-emerald-600 transition-all duration-200 hover:scale-110 hover:bg-emerald-100 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:left-10 sm:p-2 sm:text-2xl"
         >
           <span aria-hidden="true">◀</span>
         </button>
@@ -528,7 +522,7 @@ export default function Home() {
           type="button"
           onClick={handleNext}
           aria-label="Next slide"
-          className="group absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-emerald-200 bg-white/80 p-2 text-2xl text-emerald-600 transition-all duration-200 hover:scale-110 hover:bg-emerald-100 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:right-10 sm:p-3 sm:text-3xl"
+          className="group absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-emerald-200 bg-white/80 p-1.5 text-xl text-emerald-600 transition-all duration-200 hover:scale-110 hover:bg-emerald-100 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:right-10 sm:p-2 sm:text-2xl"
         >
           <span aria-hidden="true">▶</span>
         </button>
@@ -553,7 +547,7 @@ export default function Home() {
                   Why NeuroSole
                 </p>
                 <h2 className="text-3xl font-semibold text-emerald-900 md:text-4xl">
-                  🛑 The Problem
+                   The Problem
                 </h2>
                 <p className="text-base text-slate-600 md:text-lg">
                   The insoles industry is moving fast, but the patient journey still lags behind. Here are the gaps we are closing first.
@@ -606,7 +600,7 @@ export default function Home() {
               }}
             >
               <Image
-                src="/images/68911fe0c0c9d5b007515cdc_title_image_A1_framed.avif"
+                src="/images/flatfeet_1512x.webp"
                 alt="NeuroSole insole"
                 fill
                 sizes="(max-width: 768px) 320px, 416px"
