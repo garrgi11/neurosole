@@ -9,20 +9,20 @@ const createGradientPlaceholder = (id, from, via, to) => {
       <defs>
         <linearGradient id="grad-${id}" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="${from}" />
-          <stop offset="50%" stop-color="${via}" />
+          <stop offset="45%" stop-color="${via}" />
           <stop offset="100%" stop-color="${to}" />
         </linearGradient>
       </defs>
       <rect width="800" height="1000" fill="url(#grad-${id})" />
-      <circle cx="200" cy="260" r="160" fill="rgba(255,255,255,0.18)" />
-      <circle cx="560" cy="620" r="240" fill="rgba(255,255,255,0.12)" />
-      <path d="M0 720 C240 640 460 820 800 720 L800 1000 L0 1000 Z" fill="rgba(255,255,255,0.16)" />
+      <circle cx="190" cy="250" r="150" fill="rgba(255,255,255,0.16)" />
+      <circle cx="560" cy="650" r="240" fill="rgba(255,255,255,0.12)" />
+      <path d="M0 720 C240 640 460 820 800 720 L800 1000 L0 1000 Z" fill="rgba(255,255,255,0.14)" />
     </svg>
   `;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 };
 
-const INSIGHT_CARDS = [
+const INSIGHTS = [
   {
     badge: '01',
     title: 'Delayed Access to Care',
@@ -74,7 +74,7 @@ export default function NeuroSoleProblemSection() {
   const [imageVisible, setImageVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const insights = useMemo(() => [...INSIGHT_CARDS], []);
+  const insights = useMemo(() => [...INSIGHTS], []);
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') {
@@ -188,57 +188,38 @@ export default function NeuroSoleProblemSection() {
             closing first.
           </p>
 
-          <div className="mt-14 flex flex-col gap-[70vh] pb-[70vh]">
+          <div className="mt-10 space-y-10">
             {insights.map((card, index) => (
               <article
                 key={card.title}
                 ref={(element) => {
                   insightRefs.current[index] = element ?? undefined;
                 }}
-                className={`relative pl-10 transition-all duration-600 ease-out ${
+                className={`group relative overflow-hidden rounded-3xl border border-emerald-100/70 bg-white/95 p-8 shadow-[0_18px_44px_rgba(16,185,129,0.14)] transition-[transform,opacity] duration-[760ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
                   activeIndex === index
                     ? 'translate-y-0 opacity-100'
-                    : 'translate-y-12 opacity-30'
+                    : 'translate-y-6 opacity-60'
                 }`}
-                style={{ transitionDelay: textVisible ? `${220 + index * 140}ms` : '0ms' }}
+                style={{ transitionDelay: textVisible ? `${200 + index * 120}ms` : '0ms' }}
               >
-                <div
-                  className={`absolute left-0 top-2 h-3 w-3 rounded-full transition-all duration-500 ${
-                    activeIndex === index
-                      ? 'bg-gradient-to-br from-emerald-500 via-emerald-400 to-lime-300 shadow-[0_0_0_6px_rgba(16,185,129,0.18)]'
-                      : 'bg-emerald-300/70 shadow-none'
-                  }`}
-                  aria-hidden
-                />
-                {index < insights.length - 1 && (
-                  <div
-                    className="absolute left-1 top-6 h-[calc(70vh-1.2rem)] w-px rounded-full"
-                    style={{
-                      background:
-                        'linear-gradient(to bottom, rgba(16,185,129,0.35), rgba(16,185,129,0.08))',
-                      opacity: activeIndex === index ? 0.4 : 0.12,
-                    }}
-                    aria-hidden
-                  />
-                )}
-                <h3
-                  className={`text-lg font-semibold md:text-xl transition-colors duration-500 ${
-                    activeIndex === index ? 'text-slate-900' : 'text-slate-500/75'
-                  }`}
-                >
-                  {card.title}
-                </h3>
-                <p
-                  className={`mt-3 text-sm md:text-base transition-colors duration-500 ${
-                    activeIndex === index ? 'text-slate-600' : 'text-slate-400/60'
-                  }`}
-                  style={{ maxWidth: '34rem' }}
-                >
-                  {card.body}
-                </p>
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-50/0 via-white/45 to-emerald-100/30 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="relative flex items-start gap-4">
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-sm font-semibold uppercase tracking-wider text-white shadow-[0_8px_20px_rgba(16,185,129,0.35)] ${
+                      activeIndex === index ? 'opacity-100' : 'opacity-50'
+                    }`}
+                  >
+                    {card.badge}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 md:text-xl">{card.title}</h3>
+                    <p className="mt-3 text-sm text-slate-600 md:text-base" style={{ maxWidth: '36rem' }}>
+                      {card.body}
+                    </p>
+                  </div>
+                </div>
               </article>
             ))}
-            <div aria-hidden className="h-[40vh]" />
           </div>
         </div>
 
