@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { AMFLoader } from 'three/examples/jsm/loaders/AMFLoader.js';
+
 
 const InsoleRenderer = () => {
   const mountRef = useRef(null);
@@ -13,6 +15,10 @@ const InsoleRenderer = () => {
   const [draggedHandle, setDraggedHandle] = useState(null);
   const [dragPlane, setDragPlane] = useState(null);
   const [stlFileName, setStlFileName] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPatientInfoOpen, setIsPatientInfoOpen] = useState(true);
+  const [isInsoleSettingsOpen, setIsInsoleSettingsOpen] = useState(true);
+  const [canDownload, setCanDownload] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     weight: '',
@@ -34,13 +40,12 @@ const InsoleRenderer = () => {
 
   const originalHandlePositions = useRef({});
   const shoeDataRef = useRef(null);
-
-  const insoleRef = useRef(null);
-  const contourLinesRef = useRef([]);
+  const footMeshRef = useRef(null);
 
   const controlsRef = useRef(null);
   const velocityRef = useRef(new THREE.Vector3());
   const directionRef = useRef(new THREE.Vector3());
+  const sceneRef = useRef(null);
   const moveRef = useRef({
     forward: false,
     backward: false,
@@ -48,8 +53,9 @@ const InsoleRenderer = () => {
     right: false,
   });
   const clock = useRef(new THREE.Clock());
-  const footMeshRef = useRef(null);
-  const sceneRef = useRef(null);
+  const insoleRef = useRef(null);
+  const contourLinesRef = useRef([]);
+  const amfInsoleRef = useRef(null); 
 
   const [meshParams, setMeshParams] = useState({
     heelThickness: 25,
@@ -63,42 +69,60 @@ const InsoleRenderer = () => {
   useEffect(() => {
   shoeDataRef.current = shoeData;
 }, [shoeData]);
-useEffect(() => {
-  if (!shoeDataRef.current || !insoleRef.current) return;
 
-  // Rebuild geometry
-  const newGeom = createInsoleGeometry(shoeDataRef.current);
-  insoleRef.current.geometry.dispose();
-  insoleRef.current.geometry = newGeom;
 
-  // Update wireframe
-  insoleRef.current.material.wireframe = meshParams.showWireframe;
+const loadAmfInsole = (src, onDone) => {
+  const scene = sceneRef.current;
+  if (!scene) { onDone && onDone(); return; }
 
-  // Update contour line visibility
-  contourLinesRef.current.forEach(line => {
-    line.visible = meshParams.showContours;
-  });
-}, [meshParams]);
+  const loader = new AMFLoader();
+  loader.load(
+    src,
+    (amfGroup) => {
+      // Style and orient the AMF object
+      amfGroup.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.material = new THREE.MeshPhongMaterial({
+            color: 0x10b981, // emerald green
+            shininess: 80,
+          });
+        }
+      });
 
-const handleFormChange = (e) => {
-  const { name, value } = e.target;
-  setFormData((prev) => ({ ...prev, [name]: value }));
-};
+      // Match your scene orientation & scale
+      amfGroup.rotation.x = -Math.PI / 2;
+      amfGroup.scale.set(0.01, 0.01, 0.01);
 
-const handleFormSubmit = (e) => {
-  e.preventDefault();
-  console.log('Submitted form data:', formData);
+      scene.add(amfGroup);
+      amfInsoleRef.current = amfGroup;
+      setIsPatientInfoOpen(false);
+      setIsInsoleSettingsOpen(false);
+
+      // ✅ footMeshRef.current (your STL) stays in the scene unchanged
+      //    so you do NOT remove or modify it here
+
+      onDone && onDone();
+    },
+    undefined,
+    (err) => {
+      console.error('AMF load error:', err);
+      onDone && onDone();
+    }
+  );
 };
 
 const handleStlFile = (event) => {
-  const scene = sceneRef.current;
-  if (!scene) return;
   const file = event.target.files[0];
   if (!file) return;
+  const scene = sceneRef.current;
+  if (!scene) return;
 
   // Convert file to URL for STLLoader
   const url = URL.createObjectURL(file);
   setStlFileName(file.name);
+
 
   const stlLoader = new STLLoader();
   stlLoader.load(
@@ -123,6 +147,49 @@ const handleStlFile = (event) => {
       console.error('Error loading STL:', err);
     }
   );
+};
+
+const handleFormChange = (e) => {
+  const { name, value } = e.target;
+  setFormData((prev) => ({ ...prev, [name]: value }));
+};
+
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  removeSphereMeshes();
+
+  // Start the white/green loading overlay
+  setIsGenerating(true);
+
+  // Simulate server processing (~30s). Replace with your real API call later.
+  await new Promise((r) => setTimeout(r, 5000));
+
+  const scene = sceneRef.current;
+  if (!scene) { setIsGenerating(false); return; }
+
+  // 1) Remove current "foot sole" (your JSON insole + contour lines)
+  if (insoleRef.current) {
+    scene.remove(insoleRef.current);
+    if (insoleRef.current.geometry) insoleRef.current.geometry.dispose();
+    if (insoleRef.current.material) insoleRef.current.material.dispose();
+    insoleRef.current = null;
+  }
+  if (contourLinesRef.current && contourLinesRef.current.length) {
+    contourLinesRef.current.forEach((line) => {
+      scene.remove(line);
+      if (line.geometry) line.geometry.dispose();
+      if (line.material) line.material.dispose();
+    });
+    contourLinesRef.current = [];
+  }
+
+  // 2) Load AMF insole (keep STL foot if you already loaded it)
+  //    Change the path to your real AMF file
+  loadAmfInsole('/Example-Left-Flat-Insole.amf', () => {
+    // Hide overlay after AMF is in the scene
+    setIsGenerating(false);
+    setCanDownload(true);
+  });
 };
 
 
@@ -328,6 +395,22 @@ const createInsoleGeometry = (data) => {
     return sphereMeshes;
 };
 
+const removeSphereMeshes = () => {
+  const scene = sceneRef.current;  // or however you stored your scene
+  if (!scene || !handlesRef.current) return;
+
+  // Remove each handle mesh from the scene
+  handlesRef.current.forEach(mesh => {
+    scene.remove(mesh);
+    mesh.geometry.dispose();
+    mesh.material.dispose();
+  });
+
+  // Clear the reference array
+  handlesRef.current = [];
+};
+
+
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -360,15 +443,19 @@ const createInsoleGeometry = (data) => {
     };
     const onKeyDown = (e) => {
       switch (e.code) {
+        case 'KeyW':
         case 'ArrowUp':
           moveRef.current.forward = true;
           break;
+        case 'KeyS':
         case 'ArrowDown':
           moveRef.current.backward = true;
           break;
+        case 'KeyA':
         case 'ArrowLeft':
           moveRef.current.left = true;
           break;
+        case 'KeyD':
         case 'ArrowRight':
           moveRef.current.right = true;
           break;
@@ -377,15 +464,19 @@ const createInsoleGeometry = (data) => {
 
     const onKeyUp = (e) => {
       switch (e.code) {
+        case 'KeyW':
         case 'ArrowUp':
           moveRef.current.forward = false;
           break;
+        case 'KeyS':
         case 'ArrowDown':
           moveRef.current.backward = false;
           break;
+        case 'KeyA':
         case 'ArrowLeft':
           moveRef.current.left = false;
           break;
+        case 'KeyD':
         case 'ArrowRight':
           moveRef.current.right = false;
           break;
@@ -654,6 +745,7 @@ const createInsoleGeometry = (data) => {
           scene.add(line);
         });
         contourLinesRef.current = contourLines;
+        
         // Position camera
         camera.position.set(0, 2, 5); // 3,2,3
         camera.lookAt(0, 0, 0);
@@ -664,43 +756,11 @@ const createInsoleGeometry = (data) => {
       }
     });
 
-    // STL FOOT LOADER
-    // const stlLoader = new STLLoader();
-    // stlLoader.load(
-    //   '/LeftFoot1.stl', 
-    //   (geometry) => {
-    //     const material = new THREE.MeshPhongMaterial({
-    //       color: 0x66ccff, // light blue foot
-    //       shininess: 40,
-    //       specular: 0x111111,
-    //     });
-    //     const footMesh = new THREE.Mesh(geometry, material);
-    //     footMesh.castShadow = true;
-    //     footMesh.receiveShadow = true;
-
-    //     // Rotate to match your scene orientation (STLs are often Z-up)
-    //     footMesh.rotation.x = -Math.PI / 2;
-
-    //     // ✅ Scale down (adjust the factor until the size matches your insole)
-    //     footMesh.scale.set(0.01, 0.01, 0.01);
-
-    //     // Position it somewhere visible
-    //     footMesh.position.set(0, 0, 0);
-
-    //     scene.add(footMesh);
-
-    //     // Store reference if needed later for dragging
-    //     footMeshRef.current = footMesh;
-    //   },
-    //   undefined,
-    //   (error) => {
-    //     console.error('Error loading STL:', error);
-    //   }
-    // );
-
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
+
+      if (isGenerating) return;
 
       const delta = clock.current.getDelta();
       const velocity = velocityRef.current;
@@ -748,24 +808,132 @@ const createInsoleGeometry = (data) => {
       }
     };
   }, []);
+  useEffect(() => {
+  if (!shoeDataRef.current || !insoleRef.current) return;
 
-  // if (!shoeData) {
-  //   console.log(shoeData);
-  //   return <div>Loading insole...</div>;
-  // }
+  // Rebuild geometry with new params
+  const newGeom = createInsoleGeometry(shoeDataRef.current);
+  insoleRef.current.geometry.dispose();
+  insoleRef.current.geometry = newGeom;
+
+  // Update material flags
+  insoleRef.current.material.wireframe = meshParams.showWireframe;
+
+  // Update contour line visibility
+  contourLinesRef.current.forEach(line => {
+    line.visible = meshParams.showContours;
+  });
+}, [meshParams]);
+
+if(isGenerating){
+  return(
+  <div className="absolute inset-0 z-[60] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center">
+    <div className="h-16 w-16 rounded-full border-4 border-emerald-400 border-t-transparent animate-spin" />
+    <p className="mt-4 text-emerald-700 font-semibold">Generating your custom insole…</p>
+    <p className="text-emerald-600 text-sm mt-1">This can take a few seconds</p>
+  </div>);
+}
+
 
   return (
-  <div className="relative w-screen h-screen bg-gradient-to-br from-slate-800 to-slate-900">
-    <div ref={mountRef} className="w-full h-full" />
+    <div className="relative w-screen h-screen bg-gradient-to-br from-slate-800 to-slate-900">
+      <div ref={mountRef} className="w-full h-full" />
+      {isPatientInfoOpen && 
+        <div className="absolute top-4 left-4 bg-white text-green-500 p-6 rounded-xl backdrop-blur-lg border border-white/20 max-w-sm">
+          <h4 className="text-lg font-bold text-green-400 mb-4">📝 Patient Information</h4>
+          <form onSubmit={handleFormSubmit} className="space-y-4 text-sm">
+            {/* Name */}
+            <div>
+              <label className="block text-black mb-1" htmlFor="name">Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleFormChange}
+                className="w-full px-3 py-2 rounded-lg bg-white text-black border border-black focus:outline-none focus:ring-2 focus:ring-green-400"
+                placeholder="Enter name"
+              />
+            </div>
 
-    {/* ===== TOP BAR ===== */}
-    <div className="absolute top-4 left-4 right-4 flex justify-between items-start gap-4">
-      {/* --- Insole Parameters (moved to top-left) --- */}
-      <div className="bg-white text-white p-6 rounded-xl backdrop-blur-lg border border-white/20 max-w-sm">
+            {/* Weight */}
+            <div>
+              <label className="block text-black mb-1" htmlFor="weight">Weight (kg)</label>
+              <input
+                id="weight"
+                name="weight"
+                type="number"
+                value={formData.weight}
+                onChange={handleFormChange}
+                className="w-full px-3 py-2 rounded-lg bg-white text-black border border-black focus:outline-none focus:ring-2 focus:ring-green-400"
+                placeholder="Enter weight"
+              />
+            </div>
+
+            {/* Shoe Size */}
+            <div>
+              <label className="block text-gray-400 mb-1" htmlFor="shoeSize">Shoe Size</label>
+              <select
+                id="shoeSize"
+                name="shoeSize"
+                value={formData.shoeSize}
+                onChange={handleFormChange}
+                className="w-full px-3 py-2 rounded-lg bg-white text-black border border-black focus:outline-none focus:ring-2 focus:ring-green-400"
+              >
+                {['US-5','US-6','US-7','US-8','US-9','US-10','US-11'].map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Defect Type */}
+            <div>
+              <label className="block text-gray-400 mb-1" htmlFor="defectType">Defect Type</label>
+              <input
+                id="defectType"
+                name="defectType"
+                type="text"
+                value={formData.defectType}
+                onChange={handleFormChange}
+                className="w-full px-3 py-2 rounded-lg bg-white text-black border border-black focus:outline-none focus:ring-2 focus:ring-green-400"
+                placeholder="e.g., Flat Foot, Bunions"
+              />
+            </div>
+
+            {/* Age */}
+            <div>
+              <label className="block text-gray-400 mb-1" htmlFor="age">Age</label>
+              <input
+                id="age"
+                name="age"
+                type="number"
+                value={formData.age}
+                onChange={handleFormChange}
+                className="w-full px-3 py-2 rounded-lg bg-white text-black border border-black focus:outline-none focus:ring-2 focus:ring-green-400"
+                placeholder="Enter age"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-semibold transition-colors"
+              onClick={handleFormSubmit}
+            >
+              Generate Insole
+            </button>
+          </form>
+        </div>
+      }
+
+      {/* Controls Panel */}
+      {isInsoleSettingsOpen &&
+      <div className="absolute top-4 right-4 bg-white text-white p-6 rounded-xl backdrop-blur-lg border border-white/20">
         <h4 className="text-lg font-bold text-green-400 mb-4">Insole Parameters</h4>
+        
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-gray-500 mb-2">
               Heel Thickness: <span className="text-green-400">{meshParams.heelThickness}mm</span>
             </label>
             <input
@@ -773,12 +941,13 @@ const createInsoleGeometry = (data) => {
               min="15"
               max="40"
               value={meshParams.heelThickness}
-              onChange={(e) => setMeshParams({ ...meshParams, heelThickness: parseInt(e.target.value) })}
-              className="w-full h-2 bg-gray-700 rounded-lg cursor-pointer"
+              onChange={(e) => setMeshParams(prev => ({...prev, heelThickness: parseInt(e.target.value)}))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
             />
           </div>
+          
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-gray-500 mb-2">
               Toe Thickness: <span className="text-green-400">{meshParams.toeThickness}mm</span>
             </label>
             <input
@@ -786,12 +955,13 @@ const createInsoleGeometry = (data) => {
               min="1"
               max="10"
               value={meshParams.toeThickness}
-              onChange={(e) => setMeshParams({ ...meshParams, toeThickness: parseInt(e.target.value) })}
-              className="w-full h-2 bg-gray-700 rounded-lg cursor-pointer"
+              onChange={(e) => setMeshParams(prev => ({...prev, toeThickness: parseInt(e.target.value)}))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
             />
           </div>
+          
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-gray-500 mb-2">
               Arch Height: <span className="text-green-400">{meshParams.archHeight}mm</span>
             </label>
             <input
@@ -799,117 +969,78 @@ const createInsoleGeometry = (data) => {
               min="0"
               max="80"
               value={meshParams.archHeight}
-              onChange={(e) => setMeshParams({ ...meshParams, archHeight: parseInt(e.target.value) })}
-              className="w-full h-2 bg-gray-700 rounded-lg cursor-pointer"
+              onChange={(e) => setMeshParams(prev => ({...prev, archHeight: parseInt(e.target.value)}))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
             />
           </div>
-          <div className="flex gap-2 mt-4">
+          
+          <div className="flex flex-wrap gap-2 mt-6">
             <button
-              onClick={() => setMeshParams({ ...meshParams, showWireframe: !meshParams.showWireframe })}
-              className={`px-4 py-2 text-xs rounded-lg ${meshParams.showWireframe ? 'bg-blue-600' : 'bg-gray-700'}`}
+              onClick={() => setMeshParams(prev => ({...prev, showWireframe: !prev.showWireframe}))}
+              className={`px-4 py-2 text-xs rounded-lg transition-all ${
+                meshParams.showWireframe 
+                  ? 'bg-blue-600 hover:bg-blue-700' 
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
             >
               Wireframe
             </button>
+            
             <button
-              onClick={() => setMeshParams({ ...meshParams, showContours: !meshParams.showContours })}
-              className={`px-4 py-2 text-xs rounded-lg ${meshParams.showContours ? 'bg-green-500' : 'bg-gray-700'}`}
+              onClick={() => setMeshParams(prev => ({...prev, showContours: !prev.showContours}))}
+              className={`px-4 py-2 text-xs rounded-lg transition-all ${
+                meshParams.showContours 
+                  ? 'bg-green-500 hover:bg-green-600' 
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
             >
               Contours
             </button>
           </div>
         </div>
-      </div>
-
-      {/* --- Patient Information (still top-right) --- */}
-      <div className="bg-white text-white p-6 rounded-xl backdrop-blur-lg border border-white/20 max-w-sm">
-        <h4 className="text-lg font-bold text-green-400 mb-4">📝 Patient Information</h4>
-        <form onSubmit={handleFormSubmit} className="space-y-4 text-sm">
-          <div>
-            <label className="block text-gray-400 mb-1">Name</label>
-            <input
-              name="name"
-              value={formData.name}
-              onChange={handleFormChange}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-black text-black focus:outline-none focus:ring-2 focus:ring-green-400"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-400 mb-1">Weight (kg)</label>
-            <input
-              type="number"
-              name="weight"
-              value={formData.weight}
-              onChange={handleFormChange}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-black text-white focus:outline-none focus:ring-2 focus:ring-green-400"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-400 mb-1">Shoe Size</label>
-            <select
-              name="shoeSize"
-              value={formData.shoeSize}
-              onChange={handleFormChange}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-black text-black focus:outline-none focus:ring-2 focus:ring-green-400"
+      </div>}
+      {/* STL Loader Panel */}
+      <div className="absolute bottom-4 right-4 bg-white text-black p-6 rounded-xl backdrop-blur-lg border border-white/20 max-w-sm">
+        {canDownload ? (
+          <>
+            <h4 className="text-lg font-bold text-green-500 mb-4">⬇️ Download Insole</h4>
+            <button
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = '/Example-Left-Flat-Insole.amf'; // ✅ Hardcoded for hackathon
+                link.download = 'Example-Left-Flat-Insole.amf';
+                link.click();
+              }}
+              className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-semibold transition-colors"
             >
-              {['US-5','US-6','US-7','US-8','US-9','US-10','US-11'].map((size) => (
-                <option key={size}>{size}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-gray-400 mb-1">Defect Type</label>
+              Download AMF
+            </button>
+          </>
+        ) : (
+          <>
+            <h4 className="text-lg font-bold text-green-500 mb-4">👣 Load Foot STL</h4>
             <input
-              name="defectType"
-              value={formData.defectType}
-              onChange={handleFormChange}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-black text-black focus:outline-none focus:ring-2 focus:ring-green-400"
+              type="file"
+              accept=".stl"
+              onChange={handleStlFile}
+              className="block w-full text-sm text-gray-300
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-lg file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-600 file:text-white
+                        hover:file:bg-blue-700
+                        cursor-pointer"
             />
-          </div>
-          <div>
-            <label className="block text-gray-400 mb-1">Age</label>
-            <input
-              type="number"
-              name="age"
-              value={formData.age}
-              onChange={handleFormChange}
-              className="w-full px-3 py-2 rounded-lg bg-white text-black border border-black focus:outline-none focus:ring-2 focus:ring-green-400"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-green-500 hover:bg-green-600 py-2 rounded-lg font-semibold"
-          >
-            Generate Insole
-          </button>
-        </form>
+            {stlFileName && (
+              <p className="mt-3 text-xs text-gray-400">
+                Loaded: <span className="text-blue-300">{stlFileName}</span>
+              </p>
+            )}
+          </>
+        )}
       </div>
     </div>
-
-    {/* ===== BOTTOM CENTER ===== */}
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-white p-6 rounded-xl backdrop-blur-lg border border-white/20 max-w-sm">
-      <h4 className="text-lg font-bold text-green-400 mb-4">Load Foot STL</h4>
-      <input
-        type="file"
-        accept=".stl"
-        onChange={handleStlFile}
-        className="block w-full text-sm text-gray-300
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-lg file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-600 file:text-white
-                  hover:file:bg-blue-700
-                  cursor-pointer"
-      />
-      {stlFileName && (
-        <p className="mt-3 text-xs text-gray-400">
-          Loaded: <span className="text-blue-300">{stlFileName}</span>
-        </p>
-      )}
-    </div>
-  </div>
-)};
-
-
-
+  );
+};
 
 export default InsoleRenderer;
